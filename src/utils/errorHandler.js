@@ -18,3 +18,13 @@ exports.serverError = (h, message) => {
     message: message || 'Terjadi kesalahan pada server'
   }).code(500);
 };
+
+
+class InvariantError extends Error { constructor(message){super(message);this.name='InvariantError';}}
+class NotFoundError extends Error { constructor(message){super(message);this.name='NotFoundError';}}
+
+const failValidation = (h, message) => h.response({status:'fail',message}).code(400);
+const notFound = (h,message) => h.response({status:'fail',message}).code(404);
+const serverError = (h) => h.response({status:'error',message:'Terjadi kesalahan pada server'}).code(500);
+
+module.exports = { failValidation, notFound, serverError, InvariantError, NotFoundError };

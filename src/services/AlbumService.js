@@ -1,35 +1,31 @@
 const { Pool } = require('pg');
 const pool = new Pool();
+const { NotFoundError } = require('../utils/errors');
 
 class AlbumService {
-  constructor() {
-    this._albums = [];
-  }
-
   async addAlbum({ id, name, year }) {
-    const newAlbum = { id, name, year };
-    this._albums.push(newAlbum);
+    await pool.query('INSERT INTO albums(id,name,year) VALUES($1,$2,$3)', [id,name,year]);
     return id;
   }
 
   async getAlbumById(id) {
-    return this._albums.find(album => album.id === id);
+    const album = await pool.query('SELECT id,name,year FROM albums WHERE id=$1', [id]);
+    if (!album.rows[0]) throw new NotFoundError('Album tidak ditemukan');
+    const songs = await pool.query('SELECT id,title,performer FROM songs WHERE album_id=$1', [id]);
+    return { ...album.rows[0], songs: songs.rows };
   }
 
   async updateAlbum(id, { name, year }) {
-    const index = this._albums.findIndex(album => album.id === id);
-    if (index === -1) return false;
-    this._albums[index] = { id, name, year };
+    const result = await pool.query('UPDATE albums SET name=$1, year=$2 WHERE id=$3 RETURNING id', [name,year,id]);
+    if (!result.rowCount) throw new NotFoundError('Album tidak ditemukan');
     return true;
   }
 
   async deleteAlbum(id) {
-    const index = this._albums.findIndex(album => album.id === id);
-    if (index === -1) return false;
-    this._albums.splice(index, 1);
+    const result = await pool.query('DELETE FROM albums WHERE id=$1', [id]);
+    if (!result.rowCount) throw new NotFoundError('Album tidak ditemukan');
     return true;
   }
 }
 
 module.exports = AlbumService;
-

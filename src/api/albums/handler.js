@@ -3,8 +3,7 @@ const AlbumService = require('../../services/AlbumService');
 const { AlbumPayloadSchema } = require('./validator');
 
 const service = new AlbumService();
-
-const { failValidation, notFound, serverError } = require('../../utils/errorHandler');
+const { failValidation, notFound, serverError, InvariantError, NotFoundError } = require('../../utils/errorHandler');
 
 // Tambah Album
 exports.addAlbumHandler = async (request, h) => {
@@ -25,18 +24,19 @@ exports.addAlbumHandler = async (request, h) => {
 
   } catch (err) {
     console.error(err);
+    if (err instanceof InvariantError) return failValidation(h, err.message);
     return serverError(h);
   }
 };
 
-// Dapatkan Album berdasarkan ID
+// Dapatkan Album berdasarkan ID (termasuk daftar lagu)
 exports.getAlbumByIdHandler = async (request, h) => {
   try {
     const album = await service.getAlbumById(request.params.id);
-    if (!album) return notFound(h, 'Album tidak ditemukan');
     return h.response({ status: 'success', data: { album } }).code(200);
   } catch (err) {
     console.error(err);
+    if (err instanceof NotFoundError) return notFound(h, err.message);
     return serverError(h);
   }
 };
@@ -50,12 +50,13 @@ exports.updateAlbumHandler = async (request, h) => {
     const { id } = request.params;
     const { name, year } = request.payload;
 
-    const updated = await service.updateAlbum(id, { name, year });
-    if (!updated) return notFound(h, 'Album tidak ditemukan');
+    await service.updateAlbum(id, { name, year });
 
     return h.response({ status: 'success', message: 'Album berhasil diperbarui' }).code(200);
   } catch (err) {
     console.error(err);
+    if (err instanceof NotFoundError) return notFound(h, err.message);
+    if (err instanceof InvariantError) return failValidation(h, err.message);
     return serverError(h);
   }
 };
@@ -65,12 +66,12 @@ exports.deleteAlbumHandler = async (request, h) => {
   try {
     const { id } = request.params;
 
-    const deleted = await service.deleteAlbum(id);
-    if (!deleted) return notFound(h, 'Album tidak ditemukan');
+    await service.deleteAlbum(id);
 
     return h.response({ status: 'success', message: 'Album berhasil dihapus' }).code(200);
   } catch (err) {
     console.error(err);
+    if (err instanceof NotFoundError) return notFound(h, err.message);
     return serverError(h);
   }
 };

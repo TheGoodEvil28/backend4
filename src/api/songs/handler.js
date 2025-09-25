@@ -3,7 +3,7 @@ const SongService = require('../../services/SongService');
 const { SongPayloadSchema } = require('./validator');
 
 const service = new SongService();
-const { failValidation, notFound, serverError } = require('../../utils/errorHandler');
+const { failValidation, notFound, serverError, InvariantError, NotFoundError } = require('../../utils/errorHandler');
 
 exports.addSongHandler = async (request, h) => {
   try {
@@ -23,13 +23,15 @@ exports.addSongHandler = async (request, h) => {
 
   } catch (err) {
     console.error(err);
+    if (err instanceof InvariantError) return failValidation(h, err.message);
     return serverError(h);
   }
 };
 
 exports.getAllSongsHandler = async (request, h) => {
   try {
-    const songs = await service.getAllSongs();
+    const { title, performer } = request.query;
+    const songs = await service.getAllSongs({ title, performer });
     return h.response({ status: 'success', data: { songs } }).code(200);
   } catch (err) {
     console.error(err);
@@ -40,10 +42,10 @@ exports.getAllSongsHandler = async (request, h) => {
 exports.getSongByIdHandler = async (request, h) => {
   try {
     const song = await service.getSongById(request.params.id);
-    if (!song) return notFound(h, 'Lagu tidak ditemukan');
     return h.response({ status: 'success', data: { song } }).code(200);
   } catch (err) {
     console.error(err);
+    if (err instanceof NotFoundError) return notFound(h, err.message);
     return serverError(h);
   }
 };
@@ -56,12 +58,13 @@ exports.updateSongHandler = async (request, h) => {
     const { id } = request.params;
     const { title, year, performer, genre, duration, albumId } = request.payload;
 
-    const updated = await service.updateSong(id, { title, year, performer, genre, duration, albumId });
-    if (!updated) return notFound(h, 'Lagu tidak ditemukan');
+    await service.updateSong(id, { title, year, performer, genre, duration, albumId });
 
     return h.response({ status: 'success', message: 'Lagu berhasil diperbarui' }).code(200);
   } catch (err) {
     console.error(err);
+    if (err instanceof NotFoundError) return notFound(h, err.message);
+    if (err instanceof InvariantError) return failValidation(h, err.message);
     return serverError(h);
   }
 };
@@ -70,12 +73,12 @@ exports.deleteSongHandler = async (request, h) => {
   try {
     const { id } = request.params;
 
-    const deleted = await service.deleteSong(id);
-    if (!deleted) return notFound(h, 'Lagu tidak ditemukan');
+    await service.deleteSong(id);
 
     return h.response({ status: 'success', message: 'Lagu berhasil dihapus' }).code(200);
   } catch (err) {
     console.error(err);
+    if (err instanceof NotFoundError) return notFound(h, err.message);
     return serverError(h);
   }
 };
