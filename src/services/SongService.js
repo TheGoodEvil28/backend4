@@ -4,28 +4,38 @@ const { InvariantError, NotFoundError } = require('../utils/errorHandler'); // p
 
 class SongService {
   async addSong({ id, title, year, performer, genre, duration, albumId }) {
-    if (albumId) {
-      const album = await pool.query('SELECT id FROM albums WHERE id=$1', [albumId]);
-      if (!album.rows[0]) throw new InvariantError('Album tidak ditemukan');
-    }
+    try {
+      if (albumId) {
+        const album = await pool.query('SELECT id FROM albums WHERE id=$1', [albumId]);
+        if (!album.rows[0]) throw new InvariantError('Album tidak ditemukan');
+      }
 
-    const query = {
-      text: `INSERT INTO songs(id,title,year,performer,genre,duration,album_id)
-             VALUES($1,$2,$3,$4,$5,$6,$7)`,
-      values: [id, title, year, performer, genre, duration || null, albumId || null]
-    };
-    await pool.query(query);
-    return id;
+      const result = await pool.query(
+        `INSERT INTO songs(id,title,year,performer,genre,duration,album_id)
+         VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+        [id, title, year, performer, genre, duration || null, albumId || null]
+      );
+
+      return result.rows[0].id;
+    } catch (err) {
+      throw new InvariantError('Gagal menambahkan lagu: ' + err.message);
+    }
   }
 
   async getSongById(id) {
-    const result = await pool.query(
-      'SELECT id,title,year,performer,genre,duration,album_id as "albumId" FROM songs WHERE id=$1',
-      [id]
-    );
-    if (!result.rows[0]) throw new NotFoundError('Lagu tidak ditemukan');
-    return result.rows[0];
+    try {
+      const result = await pool.query(
+        'SELECT id,title,year,performer,genre,duration,album_id as "albumId" FROM songs WHERE id=$1',
+        [id]
+      );
+      if (!result.rows[0]) throw new NotFoundError('Lagu tidak ditemukan');
+      return result.rows[0];
+    } catch (err) {
+      if (err instanceof NotFoundError) throw err;
+      throw new InvariantError('Gagal mengambil lagu: ' + err.message);
+    }
   }
+
 
   async updateSong(id, { title, year, performer, genre, duration, albumId }) {
     if (albumId) {
