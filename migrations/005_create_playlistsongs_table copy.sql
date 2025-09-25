@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS playlistsongs (
+  id VARCHAR(50) PRIMARY KEY,
+  playlist_id VARCHAR(50) REFERENCES playlists(id) ON DELETE CASCADE, 
+  song_id VARCHAR(50) REFERENCES songs(id) ON DELETE CASCADE
+);
