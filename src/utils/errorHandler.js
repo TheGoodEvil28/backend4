@@ -1,30 +1,46 @@
-exports.failValidation = (h, message) => {
+// src/utils/errorHandler.js
+
+// Response handler untuk client
+const failValidation = (h, message = 'Data tidak valid') => {
   return h.response({
     status: 'fail',
-    message: message || 'Data tidak valid'
+    message,
   }).code(400);
 };
 
-exports.notFound = (h, message) => {
+const notFound = (h, message = 'Resource tidak ditemukan') => {
   return h.response({
     status: 'fail',
-    message: message || 'Resource tidak ditemukan'
+    message,
   }).code(404);
 };
 
-exports.serverError = (h, message) => {
+const serverError = (h, message = 'Terjadi kesalahan pada server') => {
   return h.response({
     status: 'error',
-    message: message || 'Terjadi kesalahan pada server'
+    message,
   }).code(500);
 };
 
+// Custom error class untuk service
+class InvariantError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'InvariantError';
+  }
+}
 
-class InvariantError extends Error { constructor(message){super(message);this.name='InvariantError';}}
-class NotFoundError extends Error { constructor(message){super(message);this.name='NotFoundError';}}
+class NotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
 
-const failValidation = (h, message) => h.response({status:'fail',message}).code(400);
-const notFound = (h,message) => h.response({status:'fail',message}).code(404);
-const serverError = (h) => h.response({status:'error',message:'Terjadi kesalahan pada server'}).code(500);
-
-module.exports = { failValidation, notFound, serverError, InvariantError, NotFoundError };
+module.exports = {
+  failValidation,
+  notFound,
+  serverError,
+  InvariantError,
+  NotFoundError,
+};
