@@ -6,6 +6,7 @@ const songRoutes = require('./src/api/songs/routes');
 const userRoutes = require('./src/api/users/routes');
 const authRoutes = require('./src/api/authentications/routes');
 const playlistRoutes = require('./src/api/playlists/routes');
+const playlistSongsRoutes = require('./src/api/playlistsongs/routes'); // tambahkan
 
 const { ClientError } = require('./src/utils/errorHandler');
 
@@ -44,6 +45,7 @@ const init = async () => {
     ...userRoutes,
     ...authRoutes,
     ...playlistRoutes,
+    ...playlistSongsRoutes,
   ]);
 
   // Global error handling

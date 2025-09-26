@@ -9,17 +9,17 @@ const handler = new PlaylistSongsHandler(service, validator);
 module.exports = [
   {
     method: 'POST',
-    path: '/playlistsongs',
+    path: '/playlists/{id}/songs', // ✅ path sesuai pengujian
     handler: handler.postPlaylistSongHandler,
   },
   {
     method: 'DELETE',
-    path: '/playlistsongs',
+    path: '/playlists/{id}/songs', // ✅ path sesuai pengujian
     handler: handler.deletePlaylistSongHandler,
   },
   {
     method: 'GET',
-    path: '/playlists/{id}/songs',
+    path: '/playlists/{id}/songs', // ✅ tetap sama
     handler: handler.getPlaylistSongsHandler,
   },
 ];

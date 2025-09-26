@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-const pool = new Pool();
+// const pool = new Pool();
 const { InvariantError, NotFoundError } = require('../utils/errorHandler');
 
 class AlbumService {
